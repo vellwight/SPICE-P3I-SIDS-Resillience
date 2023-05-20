@@ -1,0 +1,133 @@
+---
+title: "Join and Filter ND-GAIN Data"
+author: "Connor"
+date: "5/19/2023"
+output: html_document
+---
+
+
+ND-GAIN Country Index
+The ND-GAIN Country Index summarizes a country's vulnerability to climate change and other global challenges in combination with its readiness to improve resilience. It aims to help governments, businesses and communities better prioritize investments for a more efficient response to the immediate global challenges ahead.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(readr)
+library(dplyr)
+library(stringr)
+library(fs)
+```
+
+
+```{r}
+# Set the path to the indicators folder
+folder_path <- here("data/nd-gain-data/resources/indicators")
+
+# Get the list of folders within the indicators folder
+sub_folders <- fs::dir_ls(folder_path)
+
+# Function to read CSV files and add the "indicator" column
+read_csv_add_indicator <- function(file_path) {
+  file_name <- fs::path_file(file_path)
+  
+  # Check if the file name matches the conditions
+  if (str_detect(file_name, "^raw[0]?\\.csv$|^score\\.csv$"))
+    return(NULL)
+  
+  # Read the CSV file into a dataframe
+  df <- readr::read_csv(file_path)
+  
+  # Add the "indicator" column with the file name
+  df <- df %>% mutate(indicator = str_remove(file_name, "\\.csv$"))
+  
+  return(df)
+}
+
+# List to store all dataframes
+df_list <- list()
+
+# Loop through each subfolder and read the CSV files
+for (sub_folder in sub_folders) {
+  csv_files <- fs::dir_ls(sub_folder, regexp = "\\.csv$", recurse = FALSE)
+  
+  for (csv_file in csv_files) {
+    # Read the CSV file and add the "indicator" column
+    df <- read_csv_add_indicator(csv_file)
+    
+    # Store the dataframe with the same name as the CSV file
+    if (!is.null(df)) {
+      df_name <- fs::path_file(csv_file)
+      assign(df_name, df)
+      
+      # Pivot the dataframe from 1995:2020
+      df_pivot <- df %>% 
+        pivot_longer(cols = matches("^[0-9]{4}$"), 
+                     names_to = "year", 
+                     values_to = "value")
+      
+      # Update the dataframe with the pivoted version
+      assign(df_name, df_pivot)
+      
+      # Add the dataframe to the list
+      df_list[[df_name]] <- df_pivot
+    }
+  }
+}
+```
+
+```{r}
+combined_df <- bind_rows(df_list)
+```
+
+```{r}
+sids <- c('Anguilla', 'Antigua and Barbuda', 'Bahrain', 'Barbados', 'Belize', 'Cabo Verde', 'Comoros', 
+             'Cook Islands', 'Dominica', 'Dominican Republic', 'Fiji', 'Grenada', 'Guinea-Bissau', 'Guyana', 
+             'Haiti', 'Jamaica', 'Kiribati', 'Maldives', 'Marshall Islands', 'Mauritius', 'Micronesia', 
+             'Montserrat', 'Nauru', 'Niue', 'Palau', 'Papua New Guinea', 'Saint Kitts and Nevis', 'Saint Lucia', 
+             'Saint Vincent and the Grenadines', 'Samoa', 'Sao Tome and Principe', 'Seychelles', 'Solomon Islands', 
+             'Suriname', 'Timor-Leste', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Turks and Caicos Islands', 
+             'Tuvalu', 'Vanuatu')
+```
+
+```{r}
+combined_df <- combined_df %>%
+  mutate(sids_context = ifelse(Name %in% sids, "sids", "non-sids"))
+```
+
+
+```{r}
+write_csv(combined_df, here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
+```
+
+
+
+
+
+<!-- ```{r} -->
+<!-- # Loop through each dataframe and select rows where Name is in SIDS -->
+<!-- for (df_name in ls(pattern = "\\.csv$")) { -->
+<!--   df <- get(df_name) -->
+<!--   df_filtered <- df %>% filter(Name %in% sids) -->
+
+<!--   # Update the dataframe with the filtered version -->
+<!--   assign(df_name, df_filtered) -->
+
+<!--   df_list[[df_name]] <- df_filtered -->
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- combined_df_sids <- bind_rows(df_list) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- write_csv(combined_df_sids, here("data/nd-gain-data/joined_data/nd-gain-joined-sids.csv")) -->
+<!-- ``` -->
+
+
+

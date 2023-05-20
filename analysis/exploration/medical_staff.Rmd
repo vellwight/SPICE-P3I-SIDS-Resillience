@@ -1,0 +1,73 @@
+---
+title: "medical staff test"
+author: "Connor"
+date: "5/19/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(plotly)
+library(RColorBrewer)
+```
+
+```{r}
+medical_staff <- read_csv(here("data/nd-gain-data/resources/indicators/id_heal_05/medical_staff.csv"))
+```
+
+
+```{r}
+sids <- c('Anguilla', 'Antigua and Barbuda', 'Bahrain', 'Barbados', 'Belize', 'Cabo Verde', 'Comoros', 
+             'Cook Islands', 'Dominica', 'Dominican Republic', 'Fiji', 'Grenada', 'Guinea-Bissau', 'Guyana', 
+             'Haiti', 'Jamaica', 'Kiribati', 'Maldives', 'Marshall Islands', 'Mauritius', 'Micronesia', 
+             'Montserrat', 'Nauru', 'Niue', 'Palau', 'Papua New Guinea', 'Saint Kitts and Nevis', 'Saint Lucia', 
+             'Saint Vincent and the Grenadines', 'Samoa', 'Sao Tome and Principe', 'Seychelles', 'Solomon Islands', 
+             'Suriname', 'Timor-Leste', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Turks and Caicos Islands', 
+             'Tuvalu', 'Vanuatu')
+```
+
+```{r}
+medical_staff_sids <- medical_staff %>%
+  filter(Name %in% sids)
+```
+
+```{r}
+medical_staff_sids_longer <- medical_staff_sids %>% 
+  pivot_longer(cols = '1995':'2020',
+               names_to = "year",
+               values_to = "value")
+```
+
+```{r}
+medical_staff_sids_longer$year <- as.numeric(medical_staff_sids_longer$year)
+```
+
+
+```{r}
+medical_staff_plot <- ggplot(data = medical_staff_sids_longer, aes(x = year, 
+                                             y = value, color = Name)) +
+  geom_line() +
+   theme_minimal() +
+  theme(legend.position="none") +
+  scale_color_brewer(palette = "Set3")
+ 
+```
+
+```{r}
+ggplotly(medical_staff_plot)
+```
+
+
+Create a scatter plot of GDP (from SIDS Data Platform Random Forest Regressor) and medical staff
+
+Steps
+- read in gdp from gdp folder (input.csv)
+- combine datasets 
+- add region column
+- select for most recent year available or 2015 (from model)
+- plot scatter plot
+
+
+

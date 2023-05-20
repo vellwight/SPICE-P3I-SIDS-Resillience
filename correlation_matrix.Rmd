@@ -1,0 +1,63 @@
+---
+title: "Correlation Matrix"
+author: "Connor"
+date: "5/19/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(ggcorrplot)
+library(plotly)
+```
+
+```{r}
+dataset <- read_csv(here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
+```
+
+```{r}
+dataset$value <- round(dataset$value, digits = 2)
+```
+
+```{r}
+dataset <- dataset %>% 
+  filter(year == 2020)
+```
+
+```{r}
+dataset <- drop_na(dataset)
+```
+
+```{r}
+dataset <- dataset %>% 
+  pivot_wider(names_from = indicator, 
+              values_from = value)
+  
+```
+
+```{r}
+dataset <- dataset %>% 
+  select(-ISO3, -year, -Name)
+```
+
+```{r}
+dataset <- dataset %>%
+  mutate(sids_context = ifelse(sids_context == "non-sids", 0, 1))
+```
+
+```{r}
+cor_matrix <- cor(dataset[complete.cases(dataset), ], use = "pairwise.complete.obs")
+```
+
+```{r}
+corrplot <- ggcorrplot(cor_matrix, type = "lower", outline.color = "white") +
+  theme(axis.text.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3))
+```
+
+```{r}
+ggplotly(corrplot)
+```
+
