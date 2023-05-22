@@ -1,0 +1,146 @@
+---
+title: "Clustering"
+author: "Connor"
+date: "5/21/2023"
+output: html_document
+---
+
+
+Goal of this Rmd: Cluster countries based on ND-GAIN Data
+
+Steps:
+- Reshape data
+- Impute missing Data
+- Determine optimal # of clusters
+- Cluster data
+- Analyze results
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(dplyr)
+library(missRanger)
+library(cluster)
+library(factoextra)
+library(randomForest)
+library(ClustImpute)
+library(plotly)
+#library(estlibrary)
+
+options(scipen = 99)
+options(ggrepel.max.overlaps = Inf)
+set.seed(3)
+```
+
+```{r}
+nd_gain_data <- read_csv(here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
+```
+
+```{r}
+nd_gain_data$value <- round(nd_gain_data$value, digits = 2)
+```
+
+```{r}
+nd_gain_data <- nd_gain_data %>% 
+  filter(year == 2020)
+```
+
+```{r}
+nd_gain_data <- drop_na(nd_gain_data)
+```
+
+```{r}
+nd_gain_data <- nd_gain_data %>% 
+  pivot_wider(names_from = indicator, 
+              values_from = value)
+  
+```
+
+
+```{r}
+nd_gain_data <- nd_gain_data %>% 
+  select(-ISO3, -year, -sids_context, -population)
+```
+
+
+```{r}
+nd_gain_data <- nd_gain_data %>% 
+  remove_rownames %>% 
+  column_to_rownames(var="Name")
+```
+
+
+```{r}
+nd_gain_data_less_na <- nd_gain_data[, which(colMeans(!is.na(nd_gain_data)) > 0.6)]
+
+
+
+#sum(is.na(nd_gain_data_less_na))/prod(dim(nd_gain_data_less_na)) # percentage of data we will be imputing based on number entered above
+```
+
+
+
+Impute using ClustImpute
+
+* For nr_cluster = x, we are determining the number of clusters that we believe there are in the data
+  - This number can be changed and has significant influence on the output data
+
+```{r}
+res <- ClustImpute(nd_gain_data_less_na, nr_cluster = 4)
+```
+
+
+Go into the ClustImpute object and retrieve the imputed data frame
+
+```{r}
+
+nd_gain_data_Clust_Impute <- res$complete_data
+
+```
+
+
+This visualization helps us to determine the number of clusters that should be used in the kmeans() function
+
+```{r}
+fviz_nbclust(nd_gain_data_Clust_Impute, kmeans, method = "silhouette")
+```
+
+Remove columns with 0 variance because columns with 0 variance cause an error in clustering
+
+```{r}
+nd_gain_data_Clust_Impute <- nd_gain_data_Clust_Impute[, sapply(nd_gain_data_Clust_Impute, var) != 0]
+```
+
+
+Cluster the newly imputed data
+```{r}
+set.seed(3)
+kmeans2 <- kmeans(nd_gain_data_Clust_Impute, center = 3, nstart = 100)
+```
+
+Visualize clusters
+```{r}
+fviz_cluster(kmeans2, data = nd_gain_data_Clust_Impute,
+geom = c("text","point"),
+             repel = TRUE,            # Avoid label overlapping
+             show.clust.cent = TRUE, # Show cluster centers
+             palette = "lancet",         # Color palette see ?ggpubr::ggpar
+             ggtheme = theme_bw()+
+              theme(axis.text.x = element_text( hjust = 0.5, vjust = 0.5, size=15),
+        axis.title.x =element_text(size=20),
+        axis.text.y = element_text(hjust = 0.5, vjust = 0.5, size=15),
+        axis.title.y =element_text(size=20),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        strip.text = element_text(size=25)))
+```
+
+```{r}
+nd_gain_data_Clust_Impute_clusters <- as.data.frame(kmeans2$cluster)
+```
+
+

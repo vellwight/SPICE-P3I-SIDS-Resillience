@@ -82,20 +82,63 @@ combined_df <- bind_rows(df_list)
 ```
 
 ```{r}
-sids <- c('Anguilla', 'Antigua and Barbuda', 'Bahrain', 'Barbados', 'Belize', 'Cabo Verde', 'Comoros', 
+sids <- c('Anguilla', 'Antigua and Barbuda', 'Bahrain', 'Bahamas', 'Barbados', 'Belize', 'Cape Verde', 'Comoros', 
              'Cook Islands', 'Dominica', 'Dominican Republic', 'Fiji', 'Grenada', 'Guinea-Bissau', 'Guyana', 
-             'Haiti', 'Jamaica', 'Kiribati', 'Maldives', 'Marshall Islands', 'Mauritius', 'Micronesia', 
+             'Haiti', 'Jamaica', 'Kiribati', 'Maldives', 'Marshall Islands', 'Mauritius', 'Micronesia, Federated States of', 
              'Montserrat', 'Nauru', 'Niue', 'Palau', 'Papua New Guinea', 'Saint Kitts and Nevis', 'Saint Lucia', 
              'Saint Vincent and the Grenadines', 'Samoa', 'Sao Tome and Principe', 'Seychelles', 'Solomon Islands', 
              'Suriname', 'Timor-Leste', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Turks and Caicos Islands', 
              'Tuvalu', 'Vanuatu')
 ```
 
+
+Sids Missing 
+- Anguilla,
+- Cook Islands
+- Montserrat
+- Niue
+- Tokelau
 ```{r}
 combined_df <- combined_df %>%
   mutate(sids_context = ifelse(Name %in% sids, "sids", "non-sids"))
 ```
 
+
+
+```{r}
+# Assuming combined_df is your data frame
+combined_df <- combined_df[!(combined_df$Name %in% c("Brazil S<U+00E3>o Paulo",
+                                                     "Bahamas, The",
+                                                     "Bolivia, Plurinational State of",
+                                                    "Cabo Verde",
+                                                    "Congo, Rep.",
+                                                    "Congo, Dem. Rep.",
+                                                    "C<U+00F4>te d'Ivoire",
+                                                    "Egypt, Arab Rep.",
+                                                    "Gambia, The",
+                                                    "Iran, Islamic Rep.",
+                                                    "Korea, Rep.",
+                                                    "Kyrgyz Republic",
+                                                    "Lao PDR",
+                                                    "Libya",
+                                                    "North Macedonia",
+                                                    "Micronesia, Fed. Sts.",
+                                                    "Moldova",
+                                                    "St. Kitts and Nevis",
+                                                    "St. Lucia",
+                                                    "St. Vincent and the Grenadines",
+                                                    "S<U+00E3>o Tom<U+00E9> and Pr<U+00ED>ncipe",
+                                                    "Slovak Republic",
+                                                    "Eswatini",
+                                                    "Tanzania",
+                                                    "Venezuela, RB",
+                                                    "Vietnam",
+                                                    "Yemen, Rep.",
+                                                    "Korea, Democratic People's Repub",
+                                                    "Congo, the Democratic Republic o",
+                                                    NA)), ]
+
+```
 
 ```{r}
 write_csv(combined_df, here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
