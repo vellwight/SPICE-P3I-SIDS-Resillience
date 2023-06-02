@@ -28,6 +28,8 @@ library(factoextra)
 library(randomForest)
 library(ClustImpute)
 library(plotly)
+library(caret)
+library(Hmisc)
 #library(estlibrary)
 
 options(scipen = 99)
@@ -62,7 +64,7 @@ nd_gain_data <- nd_gain_data %>%
 
 ```{r}
 nd_gain_data <- nd_gain_data %>% 
-  select(-ISO3, -year, -sids_context, -population)
+  select(-ISO3, -year, -sids_context, -population, -innovation)
 ```
 
 
@@ -102,28 +104,44 @@ nd_gain_data_Clust_Impute <- res$complete_data
 ```
 
 
+Normalize the Data
+
+```{r}
+process <- preProcess(as.data.frame(nd_gain_data_Clust_Impute), method=c("range"))
+
+normalized_nd_gain <- predict(process, as.data.frame(nd_gain_data_Clust_Impute))
+```
+
+Histograms
+
+```{r}
+hist.data.frame(normalized_nd_gain)
+
+```
+
+
 This visualization helps us to determine the number of clusters that should be used in the kmeans() function
 
 ```{r}
-fviz_nbclust(nd_gain_data_Clust_Impute, kmeans, method = "silhouette")
+fviz_nbclust(normalized_nd_gain, kmeans, method = "silhouette")
 ```
 
 Remove columns with 0 variance because columns with 0 variance cause an error in clustering
 
 ```{r}
-nd_gain_data_Clust_Impute <- nd_gain_data_Clust_Impute[, sapply(nd_gain_data_Clust_Impute, var) != 0]
+#normalized_nd_gain <- normalized_nd_gain[, sapply(normalized_nd_gain, var) != 0]
 ```
 
 
 Cluster the newly imputed data
 ```{r}
 set.seed(3)
-kmeans2 <- kmeans(nd_gain_data_Clust_Impute, center = 3, nstart = 100)
+kmeans2 <- kmeans(normalized_nd_gain, center = 3, nstart = 100)
 ```
 
 Visualize clusters
 ```{r}
-fviz_cluster(kmeans2, data = nd_gain_data_Clust_Impute,
+fviz_cluster(kmeans2, data = normalized_nd_gain,
 geom = c("text","point"),
              repel = TRUE,            # Avoid label overlapping
              show.clust.cent = TRUE, # Show cluster centers

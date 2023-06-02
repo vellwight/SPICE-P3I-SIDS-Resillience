@@ -1,0 +1,82 @@
+---
+title: "Penguins Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    social: menu
+    source_code: embed
+    theme: bootstrap
+runtime: shiny
+---
+
+Break down by line*
+
+```{r global, include=FALSE}
+library(ggplot2)
+library(shiny)
+library(flexdashboard)
+library(tidyverse)
+library(here)
+library(plotly)
+library(ggiraph)
+library(rsconnect)
+library(janitor)
+options(scipen = 99)
+```
+
+```{r}
+dataset <- read_csv(here("data/penguins_data/penguins_lter.csv"))
+```
+
+```{r}
+dataset <- dataset %>% 
+  clean_names()
+```
+
+
+
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+checkboxInput('smooth', 'Smooth', value = FALSE)
+
+selectInput('x', 'X', names(dataset))
+selectInput('y', 'Y', names(dataset), names(dataset)[[2]])
+selectInput('color', 'Color', c('None', names(dataset)))
+
+selectInput('facet_row', 'Facet Row',
+c(None='.', names(dataset)))
+selectInput('facet_col', 'Facet Column',
+c(None='.', names(dataset)))
+```
+
+Outputs
+-----------------------------------------------------------------------
+
+### Data
+
+```{r}
+
+
+renderPlotly({
+  my_gg <- ggplot(data = dataset, aes_string(x=input$x, y=input$y, label = "individual_id")) + geom_point() + theme_minimal()
+  
+
+ 
+  if (input$color != 'None')
+    my_gg <- my_gg + aes_string(color=input$color)
+
+  facets <- paste(input$facet_row, '~', input$facet_col)
+  if (facets != '. ~ .')
+    my_gg <- my_gg + facet_grid(facets)
+
+  if (input$smooth)
+    my_gg <- my_gg + geom_smooth()
+
+   print(my_gg)
+})
+
+
+```

@@ -5,6 +5,9 @@ date: "5/19/2023"
 output: html_document
 ---
 
+Load Packages and Libraries
+What are packages?
+What are libraries?
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here)
@@ -13,19 +16,28 @@ library(ggcorrplot)
 library(plotly)
 ```
 
+Read in the data
+read_csv is a function from the tidyverse package
+also import button option
+
 ```{r}
 dataset <- read_csv(here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
 ```
 
+Round decimals in the value column
 ```{r}
 dataset$value <- round(dataset$value, digits = 2)
 ```
+
+
+Explain Pipe 
 
 ```{r}
 dataset <- dataset %>% 
   filter(year == 2020)
 ```
 
+Drop NA's of the dataset
 ```{r}
 dataset <- drop_na(dataset)
 ```
