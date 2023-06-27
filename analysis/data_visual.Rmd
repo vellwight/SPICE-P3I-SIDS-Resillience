@@ -1,0 +1,152 @@
+---
+title: "data_cleaning_visualization"
+author: "LaVelle"
+date: "2023-06-20"
+output: html_document
+---
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+library(tidyverse)
+library(here)
+library(readr)
+library(dplyr)
+library(stringr)
+library(fs)
+library(ggplot2)
+library(plotly)
+```
+
+##Read Notre Dame SIDS data
+
+```{r}
+nd_gain_joined <- read_csv(here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
+```
+
+##Cleaning the data
+
+```{r}
+nd_gain_joined$value <- round(nd_gain_joined$value, digits = 2)
+```
+
+
+```{r}
+nd_data_wide <- nd_gain_joined %>% 
+  pivot_wider(names_from =indicator,
+              values_from = value)
+```
+
+```{r}
+nd_data_wide_2020 <- nd_data_wide %>%
+  filter(year == 2020)
+```
+
+
+
+```{r}
+nd_data_wide_2020_ind <- nd_data_wide_2020[ , c(1,2,3,4,20,33,42,43,44)]
+```
+
+
+##Creating Visuals
+```{r}
+ggplot(data = nd_data_wide_2020, aes(x = ICT_infrastructure,
+                                 fill = sids_context)) +
+  geom_histogram(color = "black") +
+  theme_minimal() +
+  labs(title = "ICT Infrastructure Distrubution",
+       subtitle = "Among Sids and Non Sids",
+       x = "ICT Infrastructure",
+       y = "Number of Countries",
+       color = "SIDS Context")
+
+```
+
+
+```{r}
+ICT <- ggplot(data = nd_data_wide_2020, aes(x = ICT_infrastructure,
+                                y = slum_population,
+                                color = human_development_index,
+                                label = Name)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "ICT and Slum Population",
+       x = "ICT_infrastructure",
+       y = "Slum Population",
+color = "Human Development Index") +
+facet_wrap(~sids_context)
+```
+
+
+```{r}
+ggplotly(ICT)
+```
+
+
+
+```{r}
+ICT_Social <- ggplot(data = nd_data_wide_2020, aes(x = ICT_infrastructure,
+                                y = social_inequality,
+                                color = human_development_index,
+                                label = Name)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "ICT and Social Inequality",
+       x = "ICT_infrastructure",
+       y = "Social Inequality",
+color = "Human Development Index") +
+facet_wrap(~sids_context)
+
+ICT_Social
+```
+
+
+
+```{r}
+ggplotly(ICT_Social)
+```
+
+
+
+```{r}
+ICT_PoSNVo <- ggplot(data = nd_data_wide_2020, aes(x = ICT_infrastructure,
+                                y =nd_data_wide_2020$`political_stability_and_non-violence`,
+                                color = human_development_index,
+                                label = Name)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "ICT and Political stability and non violence",
+       x = "ICT_infrastructure",
+       y = "political_stability_and_non-violence",
+color = "Human Development Index") +
+facet_wrap(~sids_context)
+```
+
+
+```{r}
+ggplotly(ICT_PoSNVo)
+
+```
+
+```{r}
+plot <- ggplot(data = nd_data_wide_2020, aes(x = social_inequality,
+                                 fill = sids_context,
+                                 label = Name)) +
+  geom_histogram(color = "black") +
+  theme_minimal() +
+  labs(title = "Social inequality",
+       subtitle = "Among Sids and Non Sids",
+       x = "Social inequality",
+       y = "Number of Countries",
+       color = "SIDS Context")
+
+```
+
+```{r}
+ggplotly(plot)
+```
+
